@@ -1,0 +1,61 @@
+extends auth
+
+block auth
+  input(type='hidden' id='csrftoken_' name='_csrf', value="#{csrf_token}")
+  .text-left
+    h1 Instructions:
+    h2 1. Plug in your YubiKey
+    h2 2. Press the button below to begin U2F authentication
+    br
+    button#authBtn Begin U2F Authentication
+    h2 3. Press the button on the YubiKey to complete authentication.
+    h3    Note: if succeed, you will be redirected to 'success' page.
+    
+  div(id="fido")
+
+  script(src='u2f-api.js', type='text/javascript')
+
+  script(type='text/javascript').
+    var authBtn = document.getElementById('authBtn');
+    authBtn.onclick = function() {
+      document.getElementById('fido').style.visibility = "visible";
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/authenticateU2F', true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+        var signRequests = [JSON.parse(xhr.responseText)];
+        console.log(signRequests[0]);
+        try {
+          // ARGUMENT LOST HERE.
+          u2f.sign( ,function(data){
+            console.log(data);
+            if (!data.errorCode) {
+              var xhr2 = new XMLHttpRequest();
+              xhr2.open('POST', '/authenticateU2F', true);
+              xhr2.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+              xhr2.onreadystatechange = function() {
+                if (xhr2.readyState == 4 && xhr2.status == 200) {
+                  window.location = '/success';
+                } else if (xhr2.readyState == 4 && xhr2.status !== 200) {
+                  console.log("failed");
+                }
+              };
+              var csrftoken = document.getElementById('csrftoken_').value;
+              var jsonData = JSON.parse(JSON.stringify(data));
+              jsonData._csrf = csrftoken;
+              console.log(jsonData);
+              
+              // ARGUMENT LOST HERE.
+              xhr2.send(JSON.stringify( ));
+            } else {
+              document.getElementById('fido').innerHTML = "Token error: " + data.errorMessage;
+            }
+          },3000);
+        } catch (err) {
+          console.log("Catch err - " + err );
+        }
+      }
+    }
+    xhr.send();
+    }
+

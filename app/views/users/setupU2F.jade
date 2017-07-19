@@ -1,0 +1,74 @@
+extends auth
+
+block auth 
+  input(type='hidden' id='csrftoken_' name='_csrf', value="#{csrf_token}")
+  h2 Hi, you already login. 
+  h2 Please follow the instructions below to register you YubiKey. 
+  br
+  h3 1. plug in you YubiKey.
+  h3 2. press the button below to start registration.
+  br
+  button#regisBtn Register My YubiKey
+  br
+  h3 3. press the button on the YubiKey when you see light flashing.
+     h6 Tip: Pay attention to the browser console(F12) and terminal console to check whether there are errors coming up.
+  h3 4. once you have set your YubiKey successfully you can  
+        a(href='/logout') logout 
+        and then try and log back in. 
+  br
+  br
+  br
+
+  div
+    h3 Registration Status:
+    div(id="workspace")
+
+  script(src='u2f-api.js', type='text/javascript')
+
+  script(type='application/javascript').
+    function clearWorkspace() {
+      var element = document.getElementById('workspace');
+      while (element.firstChild) {
+        element.removeChild(element.firstChild);
+      }
+    }
+ 
+    var xhr = new XMLHttpRequest();
+ 
+    var regisBtn = document.getElementById('regisBtn');
+    regisBtn.onclick = function registerU2F() {
+      clearWorkspace();
+
+      xhr.open('GET', '/registerU2F', true);
+      xhr.onreadystatechange = function () {
+        if(xhr.readyState == 4 && xhr.status == 200) {
+          var registerRequest = [JSON.parse(xhr.responseText)];
+
+          document.getElementById('workspace').innerHTML ="Press the button on your YubiKey when the light flashes";
+
+          // ARGUMENT LOST HERE.
+          u2f.register(  ,[], function(data){
+            console.log(data);
+
+            var xhr2 = new XMLHttpRequest();
+            xhr2.open('POST', '/registerU2F', true);
+            xhr2.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xhr2.onreadystatechange = function() {
+              if (xhr2.readyState == 4 && xhr2.status == 200) {
+                document.getElementById('workspace').innerHTML ="Done! You Device has been registered successfully!";
+              } else if (xhr2.readyState == 4 && xhr2.status !== 200) {
+                document.getElementById('workspace').innerHTML ="error setting up Fido U2F token";
+              }
+            }
+            
+            var csrftoken = document.getElementById('csrftoken_').value;
+            var jsonData = JSON.parse(JSON.stringify(data));
+            jsonData._csrf = csrftoken;
+            
+            // ARGUMENT LOST HERE.
+            xhr2.send(JSON.stringify( ));
+          });
+        }
+      };
+      xhr.send();
+    }
