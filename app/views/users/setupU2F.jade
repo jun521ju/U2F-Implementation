@@ -2,18 +2,19 @@ extends auth
 
 block auth 
   input(type='hidden' id='csrftoken_' name='_csrf', value="#{csrf_token}")
-  h2 Hi, you already login. 
-  h2 Please follow the instructions below to register you YubiKey. 
+  h2 Hi, you are currently logged into the demo website.. 
+  h2 Please follow the instructions below to register your YubiKey. 
   br
-  h3 1. plug in you YubiKey.
+  h3 1. plug in your YubiKey.
   h3 2. press the button below to start registration.
   br
   button#regisBtn Register My YubiKey
   br
-  h3 3. press the button on the YubiKey when you see light flashing.
-     h6 Tip: Pay attention to the browser console(F12) and terminal console to check whether there are errors coming up.
+  h3 3. Please touch the flashing U2F device now.
+        You may be prompted to allow the site permission to access your security keys. After granting permission, the device will start to blink.
+     h6 Hint: Pay attention to the browser console(F12) and terminal console to check whether there are errors coming up.
   h3 4. once you have set your YubiKey successfully you can  
-        a(href='/logout') logout 
+        a(href='/logout') log out 
         and then try and log back in. 
   br
   br
@@ -44,7 +45,7 @@ block auth
         if(xhr.readyState == 4 && xhr.status == 200) {
           var registerRequest = [JSON.parse(xhr.responseText)];
 
-          document.getElementById('workspace').innerHTML ="Press the button on your YubiKey when the light flashes";
+          document.getElementById('workspace').innerHTML ="Touch the button on your YubiKey when the light flashes";
 
           // ARGUMENT LOST HERE.
           u2f.register(  ,[], function(data){
@@ -55,7 +56,7 @@ block auth
             xhr2.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             xhr2.onreadystatechange = function() {
               if (xhr2.readyState == 4 && xhr2.status == 200) {
-                document.getElementById('workspace').innerHTML ="Done! You Device has been registered successfully!";
+                document.getElementById('workspace').innerHTML ="Done! Your Device has been registered successfully!";
               } else if (xhr2.readyState == 4 && xhr2.status !== 200) {
                 document.getElementById('workspace').innerHTML ="error setting up Fido U2F token";
               }
